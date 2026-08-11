@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Habits</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Habits">
+<meta name="theme-color" content="#EFEEEB">
+<meta name="color-scheme" content="light">
+<style>
+:root{
+  /* Farben */
+  --c-bg:#EFEEEB;
+  --c-surface:#F4F3F1;
+  --c-surface-done:#F7DED8;
+  --c-surface-sunk:#E7E5E1;
+  --c-line:#D6D3CD;
+  --c-line-strong:#1B1917;
+  --c-text:#1B1917;
+  --c-text-soft:#57534E;
+  --c-text-muted:#8C877F;
+  --c-accent:#DC4326;
+  --c-accent-deep:#B93318;
+  --c-on-accent:#FFFFFF;
+  --c-track:#DCD9D4;
+  --c-heat-off:#E4E1DC;
+  --c-heat-miss:#CFCBC4;
+  --c-heat-part:#F0AE9C;
+  --c-heat-done:#DC4326;
+
+  /* Abstände */
+  --sp-1:4px;
+  --sp-2:8px;
+  --sp-3:12px;
+  --sp-4:16px;
+  --sp-5:20px;
+  --sp-6:28px;
+  --sp-7:40px;
+
+  /* Typografie */
+  --font-ui:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --fs-2xs:10px;
+  --fs-xs:11px;
+  --fs-sm:13px;
+  --fs-md:15px;
+  --fs-lg:19px;
+  --fs-xl:30px;
+  --fs-2xl:46px;
+  --fw-regular:400;
+  --fw-medium:600;
+  --fw-bold:700;
+  --fw-black:800;
+  --lh-tight:1.05;
+  --lh-body:1.45;
+  --ls-caps:0.13em;
+  --ls-title:-0.025em;
+
+  /* Intro */
+  --intro-t:1s;
+  --intro-stage:min(100vw, 520px);
+  --intro-mark:calc(0.167 * var(--intro-stage));
+  --ease-out-expo:cubic-bezier(0.16,1,0.3,1);
+  --ease-in-out-cubic:cubic-bezier(0.65,0,0.35,1);
+  --ease-out-back:cubic-bezier(0.34,1.56,0.64,1);
+  --ease-in-quad:cubic-bezier(0.55,0.085,0.68,0.53);
+
+  /* Formen */
+  --radius-0:0px;
+  --radius-1:2px;
+  --radius-2:4px;
+  --border-w:1px;
+  --border-w-strong:2px;
+  --tap:44px;
+  --bar-h:8px;
+  --box:30px;
+  --heat-cell:11px;
+  --heat-gap:3px;
+  --shell-max:520px;
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--c-bg);
+  color:var(--c-text);
+  font-family:var(--font-ui);
+  font-size:var(--fs-md);
+  line-height:var(--lh-body);
+  -webkit-font-smoothing:antialiased;
+  -webkit-text-size-adjust:100%;
+  padding-bottom:calc(150px + env(safe-area-inset-bottom));
+}
+button,input,textarea,select{font:inherit;color:inherit;}
+button{background:none;border:none;padding:0;margin:0;cursor:pointer;text-align:left;}
+h1,h2,h3,p,ul,ol{margin:0;padding:0;}
+ul,ol{list-style:none;}
+
+.shell{max-width:var(--shell-max);margin:0 auto;}
+.screen{display:none;}
+.screen.is-active{display:block;}
+.hidden{display:none !important;}
+
+/* ---------- Kopfbereich ---------- */
+.hd{padding:var(--sp-6) var(--sp-5) var(--sp-4);padding-top:calc(var(--sp-6) + env(safe-area-inset-top));}
+.hd-eyebrow{
+  font-size:var(--fs-xs);font-weight:var(--fw-bold);letter-spacing:var(--ls-caps);
+  text-transform:uppercase;color:var(--c-accent);margin-bottom:var(--sp-2);
+}
+.hd-row{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-3);}
+.hd-title{font-size:var(--fs-2xl);font-weight:var(--fw-black);letter-spacing:var(--ls-title);line-height:var(--lh-tight);}
+.hd-count{font-size:var(--fs-md);color:var(--c-text-muted);white-space:nowrap;}
+.hd-count b{font-size:var(--fs-lg);font-weight:var(--fw-black);color:var(--c-text);}
+.bar{height:var(--bar-h);background:var(--c-track);border-radius:var(--radius-0);margin-top:var(--sp-4);overflow:hidden;}
+.bar-fill{height:100%;width:0;background:var(--c-accent);transition:width .18s ease-out;}
+.hd-meta{
+  margin-top:var(--sp-3);font-size:var(--fs-2xs);font-weight:var(--fw-bold);
+  letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--c-text-muted);
+}
+.hd-meta b{color:var(--c-text);}
+
+/* ---------- Habit-Zeilen ---------- */
+.list{position:relative;border-top:var(--border-w) solid var(--c-line);}
+.row{
+  display:grid;grid-template-columns:auto 1fr auto;align-items:center;
+  gap:var(--sp-4);width:100%;min-height:74px;
+  padding:var(--sp-4) var(--sp-5);
+  background:var(--c-surface);
+  border-bottom:var(--border-w) solid var(--c-line);
+}
+button.row{appearance:none;}
+.row.is-done{background:var(--c-surface-done);}
+.row.is-broken{background:var(--c-surface-sunk);}
+.row-main{min-width:0;display:block;}
+.row-name{display:block;font-size:var(--fs-lg);font-weight:var(--fw-bold);letter-spacing:-0.01em;line-height:1.2;overflow-wrap:anywhere;}
+.row-sub{display:block;font-size:var(--fs-sm);color:var(--c-text-muted);margin-top:2px;line-height:1.3;}
+.row.is-broken .row-name{color:var(--c-text-soft);}
+.row-streak{text-align:right;line-height:1;}
+.streak-num{font-size:var(--fs-xl);font-weight:var(--fw-black);letter-spacing:var(--ls-title);}
+.row.is-done .streak-num{color:var(--c-accent);}
+.streak-lbl{
+  display:block;margin-top:var(--sp-1);font-size:var(--fs-2xs);font-weight:var(--fw-bold);
+  letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--c-text-muted);
+}
+.box{
+  position:relative;width:var(--box);height:var(--box);flex:none;
+  border:var(--border-w-strong) solid var(--c-line-strong);border-radius:var(--radius-1);
+  background:transparent;display:flex;align-items:center;justify-content:center;
+}
+.box svg{width:18px;height:18px;display:none;}
+.row.is-done .box:not(.is-avoid){background:var(--c-accent);border-color:var(--c-accent);color:var(--c-on-accent);}
+.row.is-done .box:not(.is-avoid) svg{display:block;}
+.box.is-avoid{border-style:dashed;border-color:var(--c-text-muted);}
+.row.is-broken .box{border-style:solid;border-color:var(--c-text-soft);background:transparent;}
+.row.is-broken .box svg{display:block;color:var(--c-text-soft);}
+
+.row-extra{grid-column:1 / -1;display:flex;align-items:center;gap:var(--sp-3);margin-top:var(--sp-1);}
+.stepper{display:flex;align-items:center;gap:var(--sp-2);flex:none;}
+.step-btn{
+  width:var(--tap);height:var(--tap);flex:none;
+  border:var(--border-w) solid var(--c-line-strong);border-radius:var(--radius-1);
+  background:var(--c-bg);font-size:var(--fs-lg);font-weight:var(--fw-bold);
+  display:flex;align-items:center;justify-content:center;
+}
+.step-btn:disabled{opacity:.3;}
+.amount-val{
+  min-width:96px;min-height:var(--tap);padding:0 var(--sp-2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:var(--fs-md);font-weight:var(--fw-bold);white-space:nowrap;
+}
+.amount-bar{flex:1;height:6px;background:var(--c-track);overflow:hidden;}
+.amount-bar span{display:block;height:100%;background:var(--c-accent);}
+.break-btn{
+  flex:1;min-height:var(--tap);padding:0 var(--sp-4);
+  border:var(--border-w-strong) solid var(--c-accent);border-radius:var(--radius-1);
+  color:var(--c-accent);background:transparent;
+  font-size:var(--fs-sm);font-weight:var(--fw-bold);letter-spacing:var(--ls-caps);
+  text-transform:uppercase;text-align:center;
+  display:flex;align-items:center;justify-content:center;
+}
+.break-btn.is-on{background:var(--c-text);border-color:var(--c-text);color:var(--c-bg);}
+
+/* ---------- Notiz ---------- */
+.note{padding:var(--sp-6) var(--sp-5) var(--sp-4);}
+.note-label{
+  display:block;font-size:var(--fs-2xs);font-weight:var(--fw-bold);letter-spacing:var(--ls-caps);
+  text-transform:uppercase;color:var(--c-text-muted);margin-bottom:var(--sp-2);
+}
+.note textarea{
+  width:100%;min-height:96px;resize:vertical;
+  padding:var(--sp-3);background:var(--c-surface);
+  border:var(--border-w) solid var(--c-line);border-radius:var(--radius-1);
+  font-size:var(--fs-md);line-height:var(--lh-body);
+}
+.note textarea:focus{outline:none;border-color:var(--c-line-strong);}
+
+/* ---------- Leerzustand ---------- */
+.empty{padding:var(--sp-7) var(--sp-5);text-align:center;color:var(--c-text-muted);}
+.empty b{display:block;color:var(--c-text);font-size:var(--fs-lg);font-weight:var(--fw-bold);margin-bottom:var(--sp-2);}
+
+/* ---------- Statistik ---------- */
+.stat-card{
+  background:var(--c-surface);border-bottom:var(--border-w) solid var(--c-line);
+  padding:var(--sp-5);
+}
+.stat-card:first-child{border-top:var(--border-w) solid var(--c-line);}
+.stat-name{font-size:var(--fs-lg);font-weight:var(--fw-bold);letter-spacing:-0.01em;}
+.stat-sub{font-size:var(--fs-sm);color:var(--c-text-muted);margin-top:2px;}
+.stat-nums{display:flex;gap:var(--sp-7);margin-top:var(--sp-4);}
+.stat-num{line-height:1;}
+.stat-num i{font-style:normal;font-size:var(--fs-xl);font-weight:var(--fw-black);letter-spacing:var(--ls-title);}
+.stat-num.is-current i{color:var(--c-accent);}
+.stat-num span{
+  display:block;margin-top:var(--sp-1);font-size:var(--fs-2xs);font-weight:var(--fw-bold);
+  letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--c-text-muted);
+}
+.heat-scroll{margin-top:var(--sp-5);overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:var(--sp-1);}
+.heat-inner{display:inline-block;}
+.heat-months{display:grid;grid-auto-flow:column;gap:var(--heat-gap);margin-bottom:var(--sp-1);height:14px;}
+.heat-months span{
+  font-size:var(--fs-2xs);font-weight:var(--fw-bold);letter-spacing:0.06em;
+  text-transform:uppercase;color:var(--c-text-muted);white-space:nowrap;
+}
+.heat-grid{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,var(--heat-cell));gap:var(--heat-gap);}
+.heat-cell{width:var(--heat-cell);height:var(--heat-cell);border-radius:var(--radius-1);background:var(--c-heat-off);}
+.heat-cell.is-future{background:transparent;}
+.heat-cell.is-miss{background:var(--c-heat-miss);}
+.heat-cell.is-part{background:var(--c-heat-part);}
+.heat-cell.is-done{background:var(--c-heat-done);}
+.heat-cell.is-open{background:var(--c-heat-off);box-shadow:inset 0 0 0 1px var(--c-heat-miss);}
+.heat-legend{display:flex;align-items:center;gap:var(--sp-2);margin-top:var(--sp-3);font-size:var(--fs-2xs);
+  font-weight:var(--fw-bold);letter-spacing:var(--ls-caps);text-transform:uppercase;color:var(--c-text-muted);}
+.heat-legend i{width:var(--heat-cell);height:var(--heat-cell);border-radius:var(--radius-1);display:inline-block;}
+
+/* ---------- Einstellungen ---------- */
+.section-label{
+  padding:var(--sp-6) var(--sp-5) var(--sp-2);
+  font-size:var(--fs-2xs);font-weight:var(--fw-bold);letter-spacing:var(--ls-caps);
+  text-transform:uppercase;color:var(--c-text-muted);
+}
+.set-row{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);
+  width:100%;min-height:var(--tap);padding:var(--sp-4) var(--sp-5);
+  background:var(--c-surface);border-top:var(--border-w) solid var(--c-line);
+}
+.set-row:last-of-type{border-bottom:var(--border-w) solid var(--c-line);}
+.set-row .row-name{font-size:var(--fs-md);}
+.set-row .chev{color:var(--c-text-muted);font-weight:var(--fw-bold);}
+.set-row.is-archived .row-name{color:var(--c-text-muted);}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;min-height:var(--tap);padding:var(--sp-3) var(--sp-4);
+  border:var(--border-w) solid var(--c-line-strong);border-radius:var(--radius-1);
+  background:var(--c-surface);font-size:var(--fs-md);font-weight:var(--fw-bold);
+}
+.btn-primary{background:var(--c-accent);border-color:var(--c-accent);color:var(--c-on-accent);}
+.btn-quiet{border-color:var(--c-line);}
+.btn-danger{border-color:var(--c-accent);color:var(--c-accent);background:transparent;}
+.btn-row{padding:var(--sp-4) var(--sp-5);display:grid;gap:var(--sp-3);}
+
+/* ---------- Bottom-Leisten ---------- */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--c-bg);}
+.dock-inner{max-width:var(--shell-max);margin:0 auto;}
+.new-bar{padding:var(--sp-3) var(--sp-5);border-top:var(--border-w) solid var(--c-line);}
+.new-bar .btn{justify-content:flex-start;border-color:var(--c-line);}
+.tabbar{display:grid;grid-template-columns:repeat(3,1fr);border-top:var(--border-w) solid var(--c-line);
+  padding-bottom:env(safe-area-inset-bottom);}
+.tab{
+  position:relative;min-height:52px;display:flex;align-items:center;justify-content:center;
+  font-size:var(--fs-2xs);font-weight:var(--fw-bold);letter-spacing:var(--ls-caps);
+  text-transform:uppercase;color:var(--c-text-muted);
+  border-top:var(--border-w-strong) solid transparent;margin-top:-1px;
+}
+.tab.is-active{color:var(--c-accent);border-top-color:var(--c-accent);}
+
+/* ---------- Editor ---------- */
+.sheet{position:fixed;inset:0;z-index:40;display:none;}
+.sheet.is-open{display:block;}
+.sheet-backdrop{position:absolute;inset:0;background:rgba(27,25,23,.4);}
+.sheet-panel{
+  position:absolute;left:0;right:0;bottom:0;top:var(--sp-7);
+  max-width:var(--shell-max);margin:0 auto;
+  background:var(--c-bg);border-top:var(--border-w-strong) solid var(--c-line-strong);
+  display:flex;flex-direction:column;
+}
+.sheet-head{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);
+  padding:var(--sp-4) var(--sp-5);border-bottom:var(--border-w) solid var(--c-line);
+}
+.sheet-title{font-size:var(--fs-lg);font-weight:var(--fw-black);letter-spacing:var(--ls-title);}
+.sheet-close{min-height:var(--tap);min-width:var(--tap);display:flex;align-items:center;justify-content:flex-end;
+  font-size:var(--fs-sm);font-weight:var(--fw-bold);text-transform:uppercase;letter-spacing:var(--ls-caps);color:var(--c-text-muted);}
+.sheet-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:var(--sp-5) var(--sp-5) var(--sp-7);}
+.field{margin-bottom:var(--sp-5);}
+.field > label,.field-label{
+  display:block;font-size:var(--fs-2xs);font-weight:var(--fw-bold);letter-spacing:var(--ls-caps);
+  text-transform:uppercase;color:var(--c-text-muted);margin-bottom:var(--sp-2);
+}
+.field input[type=text],.field input[type=number]{
+  width:100%;min-height:var(--tap);padding:var(--sp-2) var(--sp-3);
+  background:var(--c-surface);border:var(--border-w) solid var(--c-line);border-radius:var(--radius-1);
+  font-size:var(--fs-md);font-weight:var(--fw-medium);
+}
+.field input:focus{outline:none;border-color:var(--c-line-strong);}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:var(--border-w) solid var(--c-line-strong);border-radius:var(--radius-1);overflow:hidden;}
+.seg button{
+  min-height:var(--tap);display:flex;align-items:center;justify-content:center;
+  font-size:var(--fs-sm);font-weight:var(--fw-bold);background:var(--c-surface);
+  border-left:var(--border-w) solid var(--c-line-strong);text-align:center;
+}
+.seg button:first-child{border-left:none;}
+.seg button.is-on{background:var(--c-text);color:var(--c-bg);}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:var(--sp-1);}
+.days button{
+  min-height:var(--tap);display:flex;align-items:center;justify-content:center;
+  border:var(--border-w) solid var(--c-line);border-radius:var(--radius-1);
+  background:var(--c-surface);font-size:var(--fs-sm);font-weight:var(--fw-bold);
+}
+.days button.is-on{background:var(--c-accent);border-color:var(--c-accent);color:var(--c-on-accent);}
+.hint{font-size:var(--fs-sm);color:var(--c-text-muted);margin-top:var(--sp-2);}
+.sheet-actions{display:grid;gap:var(--sp-3);margin-top:var(--sp-6);}
+.err{color:var(--c-accent);font-size:var(--fs-sm);font-weight:var(--fw-bold);margin-bottom:var(--sp-3);}
+
+/* =======================================================================
+   Intro
+   Die Choreografie läuft auf den echten Elementen des Heute-Screens: jede
+   Bewegung ist eine Keyframe-Animation mit Verzögerung = Startzeit und
+   fill-mode both. Am Ende fällt nur die Klasse `is-intro` weg, die Elemente
+   stehen dann bereits an ihrem normalen Platz — es wird nichts überblendet.
+   Alle Zeiten sind Vielfache von --intro-t: ein Wert steuert das Tempo.
+   ======================================================================= */
+@keyframes intro-fade{from{opacity:0;}to{opacity:1;}}
+@keyframes intro-fade-out{from{opacity:1;}to{opacity:0;}}
+@keyframes intro-scale-x{from{transform:scaleX(0);}to{transform:scaleX(1);}}
+@keyframes intro-pop{from{transform:scale(0);}to{transform:scale(1);}}
+@keyframes intro-gone{from{visibility:visible;}to{visibility:hidden;}}
+
+/* --- Overlay: Marke und Ladebalken, bis die App übernimmt --- */
+.intro{position:fixed;inset:0;z-index:60;
+  animation:intro-gone .01s linear calc(4.62 * var(--intro-t)) forwards;}
+.intro.is-skipped{display:none;}
+.intro-backdrop{
+  position:absolute;inset:0;background:var(--c-bg);
+  animation:intro-fade-out calc(0.4 * var(--intro-t)) var(--ease-in-out-cubic) calc(1.62 * var(--intro-t)) both;
+}
+.intro-loader{
+  position:absolute;inset:0;
+  animation:intro-fade-out calc(0.28 * var(--intro-t)) var(--ease-in-out-cubic) calc(1.58 * var(--intro-t)) both;
+}
+.intro-name{
+  position:absolute;left:0;top:52%;width:100%;text-align:center;
+  font-size:calc(0.031 * var(--intro-stage));font-weight:var(--fw-bold);
+  letter-spacing:0.3em;text-indent:0.3em;text-transform:uppercase;color:var(--c-text);
+  animation:intro-fade calc(0.5 * var(--intro-t)) var(--ease-in-out-cubic) calc(0.6 * var(--intro-t)) both;
+}
+.intro-track{
+  position:absolute;left:50%;top:57%;
+  width:calc(0.333 * var(--intro-stage));height:max(2px, calc(0.0055 * var(--intro-stage)));
+  margin-left:calc(-0.167 * var(--intro-stage));background:var(--c-track);transform-origin:center center;
+  animation:intro-scale-x calc(0.5 * var(--intro-t)) var(--ease-in-out-cubic) calc(0.72 * var(--intro-t)) both;
+}
+.intro-track i{
+  display:block;width:100%;height:100%;background:var(--c-accent);transform-origin:left center;
+  animation:intro-scale-x calc(0.72 * var(--intro-t)) var(--ease-in-out-cubic) calc(0.86 * var(--intro-t)) both;
+}
+
+/* --- Die Marke wandert in die Datumszeile und klappt dort zusammen ---
+   Zielrechteck (--mark-*) misst das Skript an der echten Datumszeile ab. */
+.intro-mark{
+  position:fixed;
+  left:calc(50% - 0.5 * var(--intro-mark));top:calc(44.3% - 0.5 * var(--intro-mark));
+  width:var(--intro-mark);height:var(--intro-mark);
+  animation:
+    intro-fade calc(0.5 * var(--intro-t)) var(--ease-in-out-cubic) calc(0.1 * var(--intro-t)) both,
+    intro-mark-move calc(0.62 * var(--intro-t)) var(--ease-in-out-cubic) calc(1.62 * var(--intro-t)) both;
+}
+@keyframes intro-mark-move{
+  to{
+    left:var(--mark-x, var(--sp-5));top:var(--mark-y, var(--sp-6));
+    width:var(--mark-w, 60%);height:var(--mark-h, 16px);
+  }
+}
+.intro-mark-pop{
+  position:absolute;inset:0;transform-origin:center center;
+  animation:intro-mark-pop calc(0.7 * var(--intro-t)) var(--ease-in-out-cubic) calc(0.1 * var(--intro-t)) both;
+}
+@keyframes intro-mark-pop{from{transform:scale(0.9);}to{transform:scale(1);}}
+.intro-mark-body{
+  position:absolute;inset:0;background:var(--c-accent);transform-origin:center center;
+  animation:intro-collapse calc(0.22 * var(--intro-t)) var(--ease-in-out-cubic) calc(2.16 * var(--intro-t)) both;
+}
+@keyframes intro-collapse{from{transform:scaleY(1);}to{transform:scaleY(0);}}
+.intro-tick{
+  position:absolute;left:0;top:0;width:var(--intro-mark);height:var(--intro-mark);color:var(--c-bg);
+  animation:intro-fade-out calc(0.2 * var(--intro-t)) var(--ease-in-out-cubic) calc(1.6 * var(--intro-t)) both;
+}
+.intro-tick path{
+  animation:intro-draw-180 calc(0.5 * var(--intro-t)) var(--ease-in-out-cubic) calc(0.52 * var(--intro-t)) both;
+}
+@keyframes intro-draw-180{from{stroke-dashoffset:180;}to{stroke-dashoffset:0;}}
+
+/* --- Ab hier bewegt sich der Heute-Screen selbst --- */
+body.is-intro .hd-eyebrow{
+  animation:
+    intro-fade calc(0.3 * var(--intro-t)) var(--ease-in-out-cubic) calc(2.2 * var(--intro-t)) both,
+    intro-rise-sm calc(0.34 * var(--intro-t)) var(--ease-out-expo) calc(2.2 * var(--intro-t)) both;
+}
+@keyframes intro-rise-sm{from{transform:translateY(0.6em);}to{transform:translateY(0);}}
+
+body.is-intro .hd-title{overflow:hidden;}
+body.is-intro .hd-title span{
+  display:block;
+  animation:intro-rise-full calc(0.62 * var(--intro-t)) var(--ease-out-expo) calc(2.3 * var(--intro-t)) both;
+}
+@keyframes intro-rise-full{from{transform:translateY(100%);}to{transform:translateY(0);}}
+
+body.is-intro .hd-count,
+body.is-intro .hd-meta{
+  animation:intro-fade calc(0.4 * var(--intro-t)) var(--ease-in-out-cubic) calc(2.62 * var(--intro-t)) both;
+}
+body.is-intro .bar{
+  transform-origin:left center;
+  animation:intro-scale-x calc(0.44 * var(--intro-t)) var(--ease-out-expo) calc(2.66 * var(--intro-t)) both;
+}
+body.is-intro .bar-fill{
+  transform-origin:left center;
+  animation:intro-scale-x calc(0.6 * var(--intro-t)) var(--ease-in-out-cubic) calc(3.58 * var(--intro-t)) both;
+}
+body.is-intro .list{border-top-color:transparent;}
+body.is-intro .list::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:var(--border-w);background:var(--c-line);
+  transform-origin:left center;
+  animation:intro-scale-x calc(0.44 * var(--intro-t)) var(--ease-out-expo) calc(2.82 * var(--intro-t)) both;
+}
+body.is-intro .list > li{
+  animation:
+    intro-fade calc(0.24 * var(--intro-t)) var(--ease-in-out-cubic) calc((2.98 + var(--i, 0) * 0.16) * var(--intro-t)) both,
+    intro-slide calc(0.42 * var(--intro-t)) var(--ease-out-expo) calc((2.98 + var(--i, 0) * 0.16) * var(--intro-t)) both;
+}
+@keyframes intro-slide{from{transform:translateX(-14%);}to{transform:translateX(0);}}
+body.is-intro .row.is-done .box{background:transparent;border-color:var(--c-line-strong);}
+body.is-intro .row.is-done .box::before{
+  content:"";position:absolute;inset:calc(-1 * var(--border-w-strong));background:var(--c-accent);
+  transform-origin:center center;
+  animation:intro-pop calc(0.34 * var(--intro-t)) var(--ease-out-back) calc((3.54 + var(--i, 0) * 0.18) * var(--intro-t)) both;
+}
+body.is-intro .row.is-done .box svg{
+  position:relative;color:var(--c-on-accent);stroke-dasharray:20;
+  animation:intro-draw-20 calc(0.22 * var(--intro-t)) var(--ease-in-out-cubic) calc((3.64 + var(--i, 0) * 0.18) * var(--intro-t)) both;
+}
+@keyframes intro-draw-20{from{stroke-dashoffset:20;}to{stroke-dashoffset:0;}}
+body.is-intro .note,
+body.is-intro .new-bar{
+  animation:
+    intro-fade calc(0.3 * var(--intro-t)) var(--ease-in-out-cubic) calc(3.9 * var(--intro-t)) both,
+    intro-rise-md calc(0.44 * var(--intro-t)) var(--ease-out-expo) calc(3.9 * var(--intro-t)) both;
+}
+@keyframes intro-rise-md{from{transform:translateY(24%);}to{transform:translateY(0);}}
+body.is-intro .tabbar{
+  animation:intro-fade calc(0.3 * var(--intro-t)) var(--ease-in-out-cubic) calc(4.02 * var(--intro-t)) both;
+}
+body.is-intro .tab.is-active{border-top-color:transparent;}
+body.is-intro .tab.is-active::after{
+  content:"";position:absolute;left:0;top:calc(-1 * var(--border-w));
+  width:100%;height:var(--border-w-strong);background:var(--c-accent);
+  transform-origin:left center;
+  animation:intro-scale-x calc(0.46 * var(--intro-t)) var(--ease-out-expo) calc(4.16 * var(--intro-t)) both;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .intro{display:none;}
+  body.is-intro *{animation:none !important;}
+}
+</style>
+</head>
+<body class="is-intro">
+
+<div class="shell">
+
+  <!-- ============ HEUTE ============ -->
+  <section id="screen-today" class="screen is-active">
+    <header class="hd">
+      <p class="hd-eyebrow" id="todayDate"></p>
+      <div class="hd-row">
+        <h1 class="hd-title"><span>Heute</span></h1>
+        <p class="hd-count" id="todayCount"></p>
+      </div>
+      <div class="bar"><div class="bar-fill" id="todayBar"></div></div>
+      <p class="hd-meta" id="todayMeta"></p>
+    </header>
+    <ul class="list" id="todayList"></ul>
+    <section class="note" id="noteBox">
+      <label class="note-label" for="noteInput">Notiz zum Tag</label>
+      <textarea id="noteInput" rows="4" placeholder="Wie war der Tag?"></textarea>
+    </section>
+  </section>
+
+  <!-- ============ STATISTIK ============ -->
+  <section id="screen-stats" class="screen">
+    <header class="hd">
+      <p class="hd-eyebrow">Letzte 12 Monate</p>
+      <div class="hd-row"><h1 class="hd-title">Statistik</h1></div>
+    </header>
+    <div id="statsList"></div>
+  </section>
+
+  <!-- ============ EINSTELLUNGEN ============ -->
+  <section id="screen-settings" class="screen">
+    <header class="hd">
+      <p class="hd-eyebrow" id="settingsCount"></p>
+      <div class="hd-row"><h1 class="hd-title">Einstellungen</h1></div>
+    </header>
+    <p class="section-label">Habits</p>
+    <div id="settingsList"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" data-action="new">+ Neues Habit</button>
+    </div>
+    <p class="section-label">Daten</p>
+    <div class="btn-row">
+      <button class="btn" data-action="export">JSON exportieren</button>
+      <button class="btn btn-quiet" data-action="import">JSON importieren</button>
+      <input type="file" id="importFile" accept="application/json,.json" class="hidden">
+    </div>
+  </section>
+
+</div>
+
+<div class="dock">
+  <div class="dock-inner">
+    <div class="new-bar" id="newBar">
+      <button class="btn" data-action="new">+ Neues Habit</button>
+    </div>
+    <nav class="tabbar">
+      <button class="tab is-active" data-tab="today">Heute</button>
+      <button class="tab" data-tab="stats">Statistik</button>
+      <button class="tab" data-tab="settings">Einstellungen</button>
+    </nav>
+  </div>
+</div>
+
+<!-- ============ EDITOR ============ -->
+<div class="sheet" id="sheet">
+  <div class="sheet-backdrop" data-action="close-sheet"></div>
+  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-head">
+      <h2 class="sheet-title" id="sheetTitle">Neues Habit</h2>
+      <button class="sheet-close" data-action="close-sheet">Abbrechen</button>
+    </div>
+    <div class="sheet-body">
+      <p class="err hidden" id="sheetErr"></p>
+
+      <div class="field">
+        <label for="fName">Name</label>
+        <input type="text" id="fName" autocomplete="off" placeholder="z.B. Morgenspaziergang">
+      </div>
+
+      <div class="field">
+        <p class="field-label">Richtung</p>
+        <div class="seg" id="fDirection">
+          <button data-value="do">Aufbauen</button>
+          <button data-value="avoid">Vermeiden</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <p class="field-label">Typ</p>
+        <div class="seg" id="fType">
+          <button data-value="check">Abhaken</button>
+          <button data-value="amount">Menge</button>
+        </div>
+      </div>
+
+      <div class="field hidden" id="fAmountBox">
+        <p class="field-label">Ziel pro Tag</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">
+          <input type="number" id="fTarget" inputmode="decimal" step="any" min="0" placeholder="2">
+          <input type="text" id="fUnit" autocomplete="off" placeholder="Einheit, z.B. L">
+        </div>
+        <p class="hint" id="fTargetHint"></p>
+      </div>
+
+      <div class="field">
+        <p class="field-label">Zeitplan</p>
+        <div class="seg" id="fMode">
+          <button data-value="daily">Täglich</button>
+          <button data-value="weekdays">Wochentage</button>
+          <button data-value="perWeek">Pro Woche</button>
+        </div>
+      </div>
+
+      <div class="field hidden" id="fDaysBox">
+        <p class="field-label">Tage</p>
+        <div class="days" id="fDays">
+          <button data-day="1">Mo</button>
+          <button data-day="2">Di</button>
+          <button data-day="3">Mi</button>
+          <button data-day="4">Do</button>
+          <button data-day="5">Fr</button>
+          <button data-day="6">Sa</button>
+          <button data-day="0">So</button>
+        </div>
+      </div>
+
+      <div class="field hidden" id="fTimesBox">
+        <label for="fTimes">Mal pro Woche</label>
+        <input type="number" id="fTimes" inputmode="numeric" min="1" max="7" step="1" placeholder="3">
+      </div>
+
+      <div class="sheet-actions">
+        <button class="btn btn-primary" data-action="save">Speichern</button>
+        <button class="btn btn-quiet hidden" id="btnArchive" data-action="archive"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ INTRO ============ -->
+<div class="intro" id="intro" aria-hidden="true">
+  <div class="intro-backdrop"></div>
+  <div class="intro-loader">
+    <p class="intro-name">Heute</p>
+    <div class="intro-track"><i></i></div>
+  </div>
+  <div class="intro-mark" id="introMark">
+    <div class="intro-mark-pop">
+      <div class="intro-mark-body">
+        <svg class="intro-tick" viewBox="0 0 180 180" fill="none">
+          <path d="M44 94 L76 126 L136 56" stroke="currentColor" stroke-width="14" stroke-dasharray="180"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* =======================================================================
+   Speicher
+   ======================================================================= */
+const KEY_HABITS = "habits";
+const KEY_ENTRIES = "entries";
+const KEY_NOTES = "notes";
+
+function load(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    if(raw === null) return fallback;
+    const val = JSON.parse(raw);
+    return val === null ? fallback : val;
+  }catch(e){
+    return fallback;
+  }
+}
+function store(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+
+let habits = load(KEY_HABITS, []);
+let entries = load(KEY_ENTRIES, {});
+let notes = load(KEY_NOTES, {});
+
+const saveHabits = () => store(KEY_HABITS, habits);
+const saveEntries = () => store(KEY_ENTRIES, entries);
+const saveNotes = () => store(KEY_NOTES, notes);
+
+/* =======================================================================
+   Datum
+   ======================================================================= */
+function toISO(date){
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return y + "-" + m + "-" + d;
+}
+function fromISO(s){
+  const p = s.split("-").map(Number);
+  return new Date(p[0], p[1] - 1, p[2]);
+}
+function today(){ return toISO(new Date()); }
+function addDays(day, n){
+  const d = fromISO(day);
+  d.setDate(d.getDate() + n);
+  return toISO(d);
+}
+function weekday(day){ return fromISO(day).getDay(); }
+function mondayOf(day){
+  const d = fromISO(day);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return toISO(d);
+}
+
+const DAY_NAMES = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+const DAY_SHORT = ["So","Mo","Di","Mi","Do","Fr","Sa"];
+const MONTH_NAMES = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+const MONTH_SHORT = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+
+function formatLongDate(day){
+  const d = fromISO(day);
+  return DAY_NAMES[d.getDay()] + " " + d.getDate() + ". " + MONTH_NAMES[d.getMonth()];
+}
+
+/* =======================================================================
+   Reine Regel-Funktionen (kein DOM)
+   ======================================================================= */
+
+function isPlannedOn(habit, day){
+  if(day < habit.createdAt) return false;
+  if(habit.archived && habit.archivedAt && day > habit.archivedAt) return false;
+  if(habit.schedule.mode === "weekdays") return (habit.schedule.days || []).indexOf(weekday(day)) !== -1;
+  return true;
+}
+
+function targetOn(habit, day){
+  const list = (habit.targets || []).slice().sort((a, b) => a.from < b.from ? -1 : 1);
+  if(!list.length) return 1;
+  let value = list[0].value;
+  for(const t of list){
+    if(t.from <= day) value = t.value;
+    else break;
+  }
+  return value;
+}
+
+function pendingTarget(habit, ref){
+  const list = (habit.targets || []).slice().sort((a, b) => a.from < b.from ? -1 : 1);
+  for(let i = list.length - 1; i >= 0; i--){
+    if(list[i].from > ref) return list[i];
+  }
+  return null;
+}
+
+// Bei direction "avoid" bedeutet der Eintrag true: der Tag wurde gebrochen.
+function valueOn(habit, day){
+  const bucket = entries[day];
+  return bucket ? bucket[habit.id] : undefined;
+}
+
+function isDoneOn(habit, day){
+  const v = valueOn(habit, day);
+  if(habit.type === "amount"){
+    const n = typeof v === "number" ? v : 0;
+    const t = targetOn(habit, day);
+    return habit.direction === "avoid" ? n <= t : n >= t;
+  }
+  return habit.direction === "avoid" ? v !== true : v === true;
+}
+
+function firstEvaluableDay(habit){ return habit.createdAt; }
+function lastEvaluableDay(habit, ref){
+  if(habit.archived && habit.archivedAt && habit.archivedAt < ref) return habit.archivedAt;
+  return ref;
+}
+
+/* --- Streak: daily / weekdays --- */
+function dailyCurrentStreak(habit, ref){
+  let streak = 0;
+  let day = ref;
+  const start = firstEvaluableDay(habit);
+  while(day >= start){
+    if(isPlannedOn(habit, day)){
+      if(isDoneOn(habit, day)) streak++;
+      else if(day !== ref) break; // der laufende Tag unterbricht nie
+    }
+    day = addDays(day, -1);
+  }
+  return streak;
+}
+
+function dailyLongestStreak(habit, ref){
+  let best = 0, run = 0;
+  let day = firstEvaluableDay(habit);
+  const end = lastEvaluableDay(habit, ref);
+  while(day <= end){
+    if(isPlannedOn(habit, day)){
+      if(isDoneOn(habit, day)){
+        run++;
+        if(run > best) best = run;
+      }else if(day !== ref){
+        run = 0;
+      }
+    }
+    day = addDays(day, 1);
+  }
+  return best;
+}
+
+/* --- Streak: perWeek (Bewertungseinheit ist die Kalenderwoche Mo–So) --- */
+function weekDoneCount(habit, monday, ref){
+  const end = lastEvaluableDay(habit, ref);
+  let n = 0;
+  for(let i = 0; i < 7; i++){
+    const day = addDays(monday, i);
+    if(day > end) break;
+    if(day < habit.createdAt) continue;
+    if(isDoneOn(habit, day)) n++;
+  }
+  return n;
+}
+function weekFulfilled(habit, monday, ref){
+  return weekDoneCount(habit, monday, ref) >= (habit.schedule.times || 1);
+}
+// Eine angebrochene Woche kann nicht vollständig bewertet werden und unterbricht daher nie.
+function weekIsOpen(habit, monday, ref){
+  return habit.createdAt > monday || addDays(monday, 6) > lastEvaluableDay(habit, ref);
+}
+
+function weeklyCurrentStreak(habit, ref){
+  let streak = 0;
+  let week = mondayOf(ref);
+  const firstWeek = mondayOf(habit.createdAt);
+  while(week >= firstWeek){
+    if(weekFulfilled(habit, week, ref)) streak++;
+    else if(!weekIsOpen(habit, week, ref)) break;
+    week = addDays(week, -7);
+  }
+  return streak;
+}
+
+function weeklyLongestStreak(habit, ref){
+  let best = 0, run = 0;
+  let week = mondayOf(habit.createdAt);
+  const lastWeek = mondayOf(lastEvaluableDay(habit, ref));
+  while(week <= lastWeek){
+    if(weekFulfilled(habit, week, ref)){
+      run++;
+      if(run > best) best = run;
+    }else if(!weekIsOpen(habit, week, ref)){
+      run = 0;
+    }
+    week = addDays(week, 7);
+  }
+  return best;
+}
+
+function currentStreak(habit, ref){
+  ref = ref || today();
+  return habit.schedule.mode === "perWeek" ? weeklyCurrentStreak(habit, ref) : dailyCurrentStreak(habit, ref);
+}
+function longestStreak(habit, ref){
+  ref = ref || today();
+  return habit.schedule.mode === "perWeek" ? weeklyLongestStreak(habit, ref) : dailyLongestStreak(habit, ref);
+}
+function streakUnit(habit, n){
+  if(habit.schedule.mode === "perWeek") return n === 1 ? "Woche" : "Wochen";
+  return n === 1 ? "Tag" : "Tage";
+}
+
+/* --- Gesamt-Streak --- */
+// perWeek-Habits werden hier nicht bewertet: ihre Einheit ist die Woche, ein einzelner
+// Tag ohne Eintrag ist bei ihnen kein Fehlschlag.
+function overallDayState(day){
+  const planned = habits.filter(h => h.schedule.mode !== "perWeek" && isPlannedOn(h, day));
+  if(!planned.length) return null;
+  return planned.every(h => isDoneOn(h, day));
+}
+
+function overallStreak(ref){
+  ref = ref || today();
+  if(!habits.length) return 0;
+  let start = null;
+  for(const h of habits){
+    if(start === null || h.createdAt < start) start = h.createdAt;
+  }
+  let streak = 0;
+  let day = ref;
+  while(day >= start){
+    const state = overallDayState(day);
+    if(state === true) streak++;
+    else if(state === false && day !== ref) break;
+    day = addDays(day, -1);
+  }
+  return streak;
+}
+
+/* =======================================================================
+   Mutationen
+   ======================================================================= */
+function newId(){
+  return "h" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function setEntry(day, habitId, value){
+  const empty = value === undefined || value === null || value === false || value === 0;
+  if(empty){
+    if(entries[day]){
+      delete entries[day][habitId];
+      if(!Object.keys(entries[day]).length) delete entries[day];
+    }
+  }else{
+    if(!entries[day]) entries[day] = {};
+    entries[day][habitId] = value;
+  }
+  saveEntries();
+}
+
+// Ein neues Ziel gilt immer erst ab dem Folgetag – der laufende Tag wird nie verändert.
+function setTarget(habit, value){
+  const ref = today();
+  const tomorrow = addDays(ref, 1);
+  const kept = (habit.targets || []).filter(t => t.from <= ref);
+  if(!kept.length){
+    habit.targets = [{ value: value, from: habit.createdAt }];
+    return;
+  }
+  habit.targets = kept;
+  if(targetOn(habit, ref) !== value){
+    habit.targets.push({ value: value, from: tomorrow });
+  }
+  habit.targets.sort((a, b) => a.from < b.from ? -1 : 1);
+}
+
+function findHabit(id){ return habits.find(h => h.id === id) || null; }
+
+/* =======================================================================
+   Formatierung
+   ======================================================================= */
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]);
+}
+function fmtNum(n){
+  return Number(n).toFixed(2).replace(/\.?0+$/, "");
+}
+function fmtAmount(n, unit){
+  return fmtNum(n) + (unit ? " " + unit : "");
+}
+function scheduleLabel(habit){
+  const s = habit.schedule;
+  if(s.mode === "daily") return "Täglich";
+  if(s.mode === "perWeek") return (s.times || 1) + "× pro Woche";
+  const days = (s.days || []).slice().sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7));
+  return days.length ? days.map(d => DAY_SHORT[d]).join(" ") : "Keine Tage gewählt";
+}
+function habitSubtitle(habit){
+  const parts = [];
+  if(habit.direction === "avoid") parts.push("Vermeiden");
+  if(habit.type === "amount"){
+    const t = targetOn(habit, today());
+    parts.push((habit.direction === "avoid" ? "Max. " : "Ziel ") + fmtAmount(t, habit.unit));
+  }
+  parts.push(scheduleLabel(habit));
+  return parts.join(" · ");
+}
+
+const CHECK_SVG = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" aria-hidden="true"><path d="M4 10.5 8 14.5 16 6"/></svg>';
+const CROSS_SVG = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" aria-hidden="true"><path d="M5 5 15 15M15 5 5 15"/></svg>';
+
+/* =======================================================================
+   Rendering: Heute
+   ======================================================================= */
+const el = id => document.getElementById(id);
+
+function renderToday(){
+  const day = today();
+  el("todayDate").textContent = formatLongDate(day);
+
+  const planned = habits.filter(h => !h.archived && isPlannedOn(h, day));
+  const done = planned.filter(h => isDoneOn(h, day));
+
+  el("todayCount").innerHTML = planned.length
+    ? "<b>" + done.length + "</b> von <b>" + planned.length + "</b>"
+    : "";
+  el("todayBar").style.width = planned.length ? Math.round(done.length / planned.length * 100) + "%" : "0%";
+
+  const total = overallStreak(day);
+  el("todayMeta").innerHTML = habits.length
+    ? "Gesamt-Streak · <b>" + total + " " + (total === 1 ? "Tag" : "Tage") + "</b>"
+    : "";
+
+  const list = el("todayList");
+  list.innerHTML = "";
+
+  if(!habits.length){
+    list.innerHTML = '<li class="empty"><b>Noch keine Habits</b>Leg dein erstes Habit an, um loszulegen.</li>';
+    el("noteBox").classList.add("hidden");
+    return;
+  }
+  el("noteBox").classList.remove("hidden");
+
+  if(!planned.length){
+    list.innerHTML = '<li class="empty"><b>Heute nichts geplant</b>Geniess den freien Tag.</li>';
+  }else{
+    planned.forEach((habit, index) => list.appendChild(todayRow(habit, day, index)));
+  }
+
+  const note = el("noteInput");
+  if(document.activeElement !== note) note.value = notes[day] || "";
+}
+
+function todayRow(habit, day, index){
+  const li = document.createElement("li");
+  li.style.setProperty("--i", index || 0); // Staffelung des Intros
+  const done = isDoneOn(habit, day);
+  const streak = currentStreak(habit, day);
+  const isSimpleCheck = habit.type === "check" && habit.direction === "do";
+  const broken = habit.direction === "avoid" && valueOn(habit, day) === true;
+
+  const inner = document.createElement(isSimpleCheck ? "button" : "div");
+  inner.className = "row" + (done ? " is-done" : "") + (broken ? " is-broken" : "");
+  if(isSimpleCheck){
+    inner.type = "button";
+    inner.dataset.action = "toggle-check";
+    inner.dataset.id = habit.id;
+    inner.setAttribute("aria-pressed", done ? "true" : "false");
+  }
+
+  const box = document.createElement("span");
+  box.className = "box" + (habit.direction === "avoid" ? " is-avoid" : "");
+  box.innerHTML = habit.direction === "avoid" ? CROSS_SVG : CHECK_SVG;
+  box.setAttribute("aria-hidden", "true");
+  inner.appendChild(box);
+
+  const main = document.createElement("span");
+  main.className = "row-main";
+  main.innerHTML = '<span class="row-name">' + esc(habit.name) + "</span>" +
+                   '<span class="row-sub">' + esc(habitSubtitle(habit)) + "</span>";
+  inner.appendChild(main);
+
+  const st = document.createElement("span");
+  st.className = "row-streak";
+  st.innerHTML = '<span class="streak-num">' + streak + "</span>" +
+                 '<span class="streak-lbl">' + streakUnit(habit, streak) + "</span>";
+  inner.appendChild(st);
+
+  if(habit.type === "amount"){
+    const target = targetOn(habit, day);
+    const raw = valueOn(habit, day);
+    const value = typeof raw === "number" ? raw : 0;
+    const extra = document.createElement("div");
+    extra.className = "row-extra";
+    extra.innerHTML =
+      '<div class="stepper">' +
+        '<button type="button" class="step-btn" data-action="amount-minus" data-id="' + habit.id + '" aria-label="Weniger"' + (value <= 0 ? " disabled" : "") + '>−</button>' +
+        '<button type="button" class="amount-val" data-action="amount-set" data-id="' + habit.id + '">' +
+          esc(fmtNum(value)) + " / " + esc(fmtAmount(target, habit.unit)) +
+        "</button>" +
+        '<button type="button" class="step-btn" data-action="amount-plus" data-id="' + habit.id + '" aria-label="Mehr">+</button>' +
+      "</div>" +
+      '<div class="amount-bar"><span style="width:' + Math.min(100, target > 0 ? Math.round(value / target * 100) : 0) + '%"></span></div>';
+    inner.appendChild(extra);
+  }
+
+  if(habit.direction === "avoid"){
+    const extra = document.createElement("div");
+    extra.className = "row-extra";
+    extra.innerHTML =
+      '<button type="button" class="break-btn' + (broken ? " is-on" : "") + '" data-action="toggle-break" data-id="' + habit.id + '">' +
+        (broken ? "Gebrochen · rückgängig" : "Gebrochen") +
+      "</button>";
+    inner.appendChild(extra);
+  }
+
+  li.appendChild(inner);
+  return li;
+}
+
+/* =======================================================================
+   Rendering: Statistik
+   ======================================================================= */
+function renderStats(){
+  const wrap = el("statsList");
+  wrap.innerHTML = "";
+  const active = habits.filter(h => !h.archived);
+  if(!active.length){
+    wrap.innerHTML = '<p class="empty"><b>Noch keine Habits</b>Sobald du ein Habit anlegst, erscheint hier die Auswertung.</p>';
+    return;
+  }
+  const day = today();
+  for(const habit of active) wrap.appendChild(statCard(habit, day));
+}
+
+function statCard(habit, day){
+  const card = document.createElement("section");
+  card.className = "stat-card";
+
+  const cur = currentStreak(habit, day);
+  const best = longestStreak(habit, day);
+
+  const head = document.createElement("div");
+  head.innerHTML = '<h2 class="stat-name">' + esc(habit.name) + "</h2>" +
+                   '<p class="stat-sub">' + esc(habitSubtitle(habit)) + "</p>";
+  card.appendChild(head);
+
+  const nums = document.createElement("div");
+  nums.className = "stat-nums";
+  nums.innerHTML =
+    '<div class="stat-num is-current"><i>' + cur + "</i><span>Aktuell · " + streakUnit(habit, cur) + "</span></div>" +
+    '<div class="stat-num"><i>' + best + "</i><span>Rekord · " + streakUnit(habit, best) + "</span></div>";
+  card.appendChild(nums);
+
+  card.appendChild(heatmap(habit, day));
+
+  const legend = document.createElement("div");
+  legend.className = "heat-legend";
+  legend.innerHTML = '<i style="background:var(--c-heat-off)"></i>Frei' +
+                     '<i style="background:var(--c-heat-miss)"></i>Verpasst' +
+                     '<i style="background:var(--c-heat-done)"></i>Erfüllt';
+  card.appendChild(legend);
+
+  return card;
+}
+
+function heatmap(habit, day){
+  const scroll = document.createElement("div");
+  scroll.className = "heat-scroll";
+  const inner = document.createElement("div");
+  inner.className = "heat-inner";
+
+  const weeks = 53;
+  const start = mondayOf(addDays(day, -(weeks * 7 - 1)));
+
+  const months = document.createElement("div");
+  months.className = "heat-months";
+  const grid = document.createElement("div");
+  grid.className = "heat-grid";
+
+  let lastMonth = -1;
+  for(let w = 0; w < weeks; w++){
+    const weekStart = addDays(start, w * 7);
+    const m = fromISO(weekStart).getMonth();
+    const label = document.createElement("span");
+    if(m !== lastMonth && fromISO(weekStart).getDate() <= 7){
+      label.textContent = MONTH_SHORT[m];
+      lastMonth = m;
+    }
+    months.appendChild(label);
+
+    for(let d = 0; d < 7; d++){
+      const cellDay = addDays(weekStart, d);
+      grid.appendChild(heatCell(habit, cellDay, day));
+    }
+  }
+
+  inner.appendChild(months);
+  inner.appendChild(grid);
+  scroll.appendChild(inner);
+  requestAnimationFrame(() => { scroll.scrollLeft = scroll.scrollWidth; });
+  return scroll;
+}
+
+function heatCell(habit, cellDay, day){
+  const cell = document.createElement("i");
+  cell.className = "heat-cell";
+  let title = cellDay;
+
+  if(cellDay > day){
+    cell.className += " is-future";
+  }else if(!isPlannedOn(habit, cellDay)){
+    title += " · nicht geplant";
+  }else if(isDoneOn(habit, cellDay)){
+    cell.className += " is-done";
+    title += " · erfüllt";
+    if(habit.type === "amount"){
+      title += " (" + fmtAmount(typeof valueOn(habit, cellDay) === "number" ? valueOn(habit, cellDay) : 0, habit.unit) + ")";
+    }
+  }else if(cellDay === day){
+    cell.className += " is-open";
+    title += " · offen";
+  }else if(habit.schedule.mode === "perWeek"){
+    // Bewertungseinheit ist die Woche – ein einzelner Tag ohne Eintrag ist kein Fehlschlag.
+    title += " · kein Eintrag";
+  }else{
+    const partial = habit.type === "amount" && typeof valueOn(habit, cellDay) === "number" && valueOn(habit, cellDay) > 0;
+    cell.className += partial ? " is-part" : " is-miss";
+    title += partial ? " · teilweise (" + fmtAmount(valueOn(habit, cellDay), habit.unit) + ")" : " · verpasst";
+  }
+
+  cell.title = title;
+  return cell;
+}
+
+/* =======================================================================
+   Rendering: Einstellungen
+   ======================================================================= */
+function renderSettings(){
+  const wrap = el("settingsList");
+  wrap.innerHTML = "";
+  const active = habits.filter(h => !h.archived);
+  const archived = habits.filter(h => h.archived);
+
+  el("settingsCount").textContent = active.length
+    ? active.length + (active.length === 1 ? " aktives Habit" : " aktive Habits")
+    : "Noch nichts angelegt";
+
+  if(!habits.length){
+    wrap.innerHTML = '<p class="empty"><b>Noch keine Habits</b>Leg unten dein erstes Habit an.</p>';
+    return;
+  }
+  for(const habit of active) wrap.appendChild(settingsRow(habit));
+  if(archived.length){
+    const label = document.createElement("p");
+    label.className = "section-label";
+    label.textContent = "Archiviert";
+    wrap.appendChild(label);
+    for(const habit of archived) wrap.appendChild(settingsRow(habit));
+  }
+}
+
+function settingsRow(habit){
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "set-row" + (habit.archived ? " is-archived" : "");
+  btn.dataset.action = "edit";
+  btn.dataset.id = habit.id;
+  btn.innerHTML = '<span class="row-main"><span class="row-name">' + esc(habit.name) + "</span>" +
+                  '<span class="row-sub">' + esc(habitSubtitle(habit)) + "</span></span>" +
+                  '<span class="chev">›</span>';
+  return btn;
+}
+
+/* =======================================================================
+   Navigation
+   ======================================================================= */
+let activeTab = "today";
+
+function showTab(tab){
+  activeTab = tab;
+  for(const s of document.querySelectorAll(".screen")) s.classList.remove("is-active");
+  el("screen-" + tab).classList.add("is-active");
+  for(const t of document.querySelectorAll(".tab")) t.classList.toggle("is-active", t.dataset.tab === tab);
+  el("newBar").classList.toggle("hidden", tab !== "today");
+  window.scrollTo(0, 0);
+  render();
+}
+
+function render(){
+  if(activeTab === "today") renderToday();
+  else if(activeTab === "stats") renderStats();
+  else renderSettings();
+}
+
+/* =======================================================================
+   Editor
+   ======================================================================= */
+let editingId = null;
+const form = {
+  direction: "do",
+  type: "check",
+  mode: "daily",
+  days: [1, 2, 3, 4, 5]
+};
+
+function openEditor(habit){
+  editingId = habit ? habit.id : null;
+  el("sheetTitle").textContent = habit ? "Habit bearbeiten" : "Neues Habit";
+  el("sheetErr").classList.add("hidden");
+
+  form.direction = habit ? habit.direction : "do";
+  form.type = habit ? habit.type : "check";
+  form.mode = habit ? habit.schedule.mode : "daily";
+  form.days = habit && habit.schedule.days && habit.schedule.days.length ? habit.schedule.days.slice() : [1, 2, 3, 4, 5];
+
+  el("fName").value = habit ? habit.name : "";
+  el("fUnit").value = habit && habit.unit ? habit.unit : "";
+  el("fTarget").value = habit && habit.type === "amount" ? fmtNum(targetOn(habit, today())) : "";
+  el("fTimes").value = habit && habit.schedule.times ? habit.schedule.times : 3;
+
+  const archiveBtn = el("btnArchive");
+  archiveBtn.classList.toggle("hidden", !habit);
+  if(habit){
+    archiveBtn.textContent = habit.archived ? "Wieder aktivieren" : "Archivieren";
+    archiveBtn.classList.toggle("btn-danger", !habit.archived);
+  }
+
+  syncForm();
+  el("sheet").classList.add("is-open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeEditor(){
+  el("sheet").classList.remove("is-open");
+  document.body.style.overflow = "";
+  editingId = null;
+}
+
+function syncForm(){
+  for(const b of document.querySelectorAll("#fDirection button")) b.classList.toggle("is-on", b.dataset.value === form.direction);
+  for(const b of document.querySelectorAll("#fType button")) b.classList.toggle("is-on", b.dataset.value === form.type);
+  for(const b of document.querySelectorAll("#fMode button")) b.classList.toggle("is-on", b.dataset.value === form.mode);
+  for(const b of document.querySelectorAll("#fDays button")) b.classList.toggle("is-on", form.days.indexOf(Number(b.dataset.day)) !== -1);
+
+  el("fAmountBox").classList.toggle("hidden", form.type !== "amount");
+  el("fDaysBox").classList.toggle("hidden", form.mode !== "weekdays");
+  el("fTimesBox").classList.toggle("hidden", form.mode !== "perWeek");
+
+  const hint = el("fTargetHint");
+  const habit = editingId ? findHabit(editingId) : null;
+  if(habit && form.type === "amount"){
+    const pending = pendingTarget(habit, today());
+    hint.textContent = pending
+      ? "Geändertes Ziel gilt ab " + pending.from + " (" + fmtAmount(pending.value, habit.unit) + ")."
+      : "Ein geändertes Ziel gilt ab morgen. Vergangene Tage behalten ihr damaliges Ziel.";
+  }else{
+    hint.textContent = form.type === "amount" ? "Erfüllt, sobald der Wert das Ziel erreicht." : "";
+  }
+}
+
+function saveEditor(){
+  const err = el("sheetErr");
+  const name = el("fName").value.trim();
+  if(!name) return showErr("Bitte einen Namen eingeben.");
+
+  let target = 1;
+  if(form.type === "amount"){
+    target = parseFloat(String(el("fTarget").value).replace(",", "."));
+    if(!isFinite(target) || target <= 0) return showErr("Bitte ein Ziel grösser als 0 eingeben.");
+  }
+  if(form.mode === "weekdays" && !form.days.length) return showErr("Bitte mindestens einen Wochentag wählen.");
+
+  let times = 3;
+  if(form.mode === "perWeek"){
+    times = parseInt(el("fTimes").value, 10);
+    if(!isFinite(times) || times < 1 || times > 7) return showErr("Bitte 1 bis 7 Mal pro Woche wählen.");
+  }
+
+  const schedule = { mode: form.mode, days: [], times: 0 };
+  if(form.mode === "weekdays") schedule.days = form.days.slice().sort((a, b) => a - b);
+  if(form.mode === "perWeek") schedule.times = times;
+
+  const unit = form.type === "amount" ? (el("fUnit").value.trim() || null) : null;
+
+  if(editingId){
+    const habit = findHabit(editingId);
+    habit.name = name;
+    habit.type = form.type;
+    habit.unit = unit;
+    habit.direction = form.direction;
+    habit.schedule = schedule;
+    setTarget(habit, target);
+  }else{
+    const createdAt = today();
+    habits.push({
+      id: newId(),
+      name: name,
+      type: form.type,
+      unit: unit,
+      targets: [{ value: target, from: createdAt }],
+      direction: form.direction,
+      schedule: schedule,
+      createdAt: createdAt,
+      archived: false,
+      archivedAt: null
+    });
+  }
+  saveHabits();
+  err.classList.add("hidden");
+  closeEditor();
+  render();
+}
+
+function showErr(msg){
+  const err = el("sheetErr");
+  err.textContent = msg;
+  err.classList.remove("hidden");
+}
+
+function toggleArchive(){
+  const habit = findHabit(editingId);
+  if(!habit) return;
+  if(habit.archived){
+    habit.archived = false;
+    habit.archivedAt = null;
+  }else{
+    if(!confirm("„" + habit.name + "“ archivieren? Es verschwindet aus Heute und Statistik, die Historie bleibt erhalten.")) return;
+    habit.archived = true;
+    habit.archivedAt = today();
+  }
+  saveHabits();
+  closeEditor();
+  render();
+}
+
+/* =======================================================================
+   Export / Import
+   ======================================================================= */
+function exportJSON(){
+  const payload = { version: 1, exportedAt: new Date().toISOString(), habits: habits, entries: entries, notes: notes };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "habits-" + today() + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function importJSON(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try{
+      data = JSON.parse(String(reader.result));
+    }catch(e){
+      alert("Datei konnte nicht gelesen werden: kein gültiges JSON.");
+      return;
+    }
+    if(!data || !Array.isArray(data.habits) || typeof data.entries !== "object" || data.entries === null){
+      alert("Datei passt nicht zum erwarteten Format.");
+      return;
+    }
+    const msg = "Import überschreibt alle aktuellen Daten.\n\n" +
+      data.habits.length + " Habits, " + Object.keys(data.entries).length + " Tage mit Einträgen.\n\nWirklich fortfahren?";
+    if(!confirm(msg)) return;
+    habits = data.habits;
+    entries = data.entries;
+    notes = (data.notes && typeof data.notes === "object") ? data.notes : {};
+    saveHabits(); saveEntries(); saveNotes();
+    render();
+    alert("Import abgeschlossen.");
+  };
+  reader.readAsText(file);
+}
+
+/* =======================================================================
+   Ereignisse
+   ======================================================================= */
+document.addEventListener("click", event => {
+  const target = event.target.closest("[data-action],[data-tab],[data-value],[data-day]");
+  if(!target) return;
+
+  if(target.dataset.tab){ showTab(target.dataset.tab); return; }
+
+  if(target.parentElement && target.parentElement.id === "fDirection"){ form.direction = target.dataset.value; syncForm(); return; }
+  if(target.parentElement && target.parentElement.id === "fType"){ form.type = target.dataset.value; syncForm(); return; }
+  if(target.parentElement && target.parentElement.id === "fMode"){ form.mode = target.dataset.value; syncForm(); return; }
+  if(target.parentElement && target.parentElement.id === "fDays"){
+    const d = Number(target.dataset.day);
+    const i = form.days.indexOf(d);
+    if(i === -1) form.days.push(d); else form.days.splice(i, 1);
+    syncForm();
+    return;
+  }
+
+  const action = target.dataset.action;
+  const habit = target.dataset.id ? findHabit(target.dataset.id) : null;
+  const day = today();
+
+  switch(action){
+    case "toggle-check":
+      setEntry(day, habit.id, valueOn(habit, day) === true ? undefined : true);
+      renderToday();
+      break;
+    case "toggle-break":
+      setEntry(day, habit.id, valueOn(habit, day) === true ? undefined : true);
+      renderToday();
+      break;
+    case "amount-plus": {
+      const v = typeof valueOn(habit, day) === "number" ? valueOn(habit, day) : 0;
+      setEntry(day, habit.id, v + 1);
+      renderToday();
+      break;
+    }
+    case "amount-minus": {
+      const v = typeof valueOn(habit, day) === "number" ? valueOn(habit, day) : 0;
+      setEntry(day, habit.id, Math.max(0, v - 1));
+      renderToday();
+      break;
+    }
+    case "amount-set": {
+      const v = typeof valueOn(habit, day) === "number" ? valueOn(habit, day) : 0;
+      const input = prompt(habit.name + " – Wert für heute" + (habit.unit ? " (" + habit.unit + ")" : ""), fmtNum(v));
+      if(input === null) break;
+      const n = parseFloat(String(input).replace(",", "."));
+      if(!isFinite(n) || n < 0) break;
+      setEntry(day, habit.id, n);
+      renderToday();
+      break;
+    }
+    case "new": openEditor(null); break;
+    case "edit": openEditor(habit); break;
+    case "save": saveEditor(); break;
+    case "archive": toggleArchive(); break;
+    case "close-sheet": closeEditor(); break;
+    case "export": exportJSON(); break;
+    case "import": el("importFile").click(); break;
+  }
+});
+
+el("importFile").addEventListener("change", event => {
+  const file = event.target.files && event.target.files[0];
+  if(file) importJSON(file);
+  event.target.value = "";
+});
+
+el("noteInput").addEventListener("blur", event => {
+  const day = today();
+  const text = event.target.value.trim();
+  if(text) notes[day] = event.target.value;
+  else delete notes[day];
+  saveNotes();
+});
+
+/* =======================================================================
+   Intro
+   Das Overlay trägt nur Marke und Ladebalken. Alles Weitere bewegt der
+   Heute-Screen selbst; am Ende fällt `is-intro` weg und die App steht.
+   ======================================================================= */
+// Ende der letzten Bewegung der Choreografie, in Einheiten von --intro-t.
+const INTRO_LAST_MOVE = 4.62;
+
+function cssSeconds(name, fallback){
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const value = parseFloat(raw);
+  if(!isFinite(value)) return fallback;
+  return raw.endsWith("ms") ? value / 1000 : value;
+}
+
+function startIntro(){
+  const intro = el("intro");
+  if(!intro) return;
+  let done = false;
+  const endIntro = () => {
+    if(done) return;
+    done = true;
+    document.body.classList.remove("is-intro");
+    intro.remove();
+  };
+  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+    endIntro();
+    return;
+  }
+  // Zielrechteck der Marke ist die echte Datumszeile – so landet sie exakt dort,
+  // wo gleich das Datum steht, unabhängig von Bildschirmgrösse und Safe Area.
+  const target = el("todayDate").getBoundingClientRect();
+  const mark = el("introMark");
+  mark.style.setProperty("--mark-x", target.left + "px");
+  mark.style.setProperty("--mark-y", target.top + "px");
+  mark.style.setProperty("--mark-w", target.width + "px");
+  mark.style.setProperty("--mark-h", target.height + "px");
+  // Das Overlay fängt Tipper ab, solange die App sich aufbaut; ein Tipp bricht ab.
+  intro.addEventListener("click", endIntro);
+  intro.addEventListener("animationend", event => {
+    if(event.animationName === "intro-gone") endIntro();
+  });
+  // Reissleine: steht die Timeline – etwa weil der Tab beim Start im Hintergrund
+  // liegt –, darf das Intro die App nicht blockieren.
+  setTimeout(endIntro, INTRO_LAST_MOVE * cssSeconds("--intro-t", 1) * 1000 + 500);
+}
+
+
+// Tageswechsel um Mitternacht: beim Zurückkehren in die App neu prüfen.
+let renderedDay = today();
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState !== "visible") return;
+  if(today() !== renderedDay){
+    renderedDay = today();
+    render();
+  }
+});
+
+render();
+startIntro();
+</script>
+</body>
+</html>
